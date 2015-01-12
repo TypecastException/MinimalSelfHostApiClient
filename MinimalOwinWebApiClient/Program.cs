@@ -22,7 +22,7 @@ namespace MinimalOwinWebApiClient
             int nextId  = (from c in companies select c.Id).Max() + 1;
 
             Console.WriteLine("Add a new company...");
-            var result = companyClient.AddCompany(new Company { Id = nextId, Name = string.Format("New Company #{0}", nextId) });
+            var result = companyClient.AddCompany(new Company { Name = string.Format("New Company #{0}", nextId) });
             WriteStatusCodeResult(result);
 
             Console.WriteLine("Updated List after Add:");
