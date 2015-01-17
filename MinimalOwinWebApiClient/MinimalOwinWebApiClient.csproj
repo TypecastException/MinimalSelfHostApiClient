@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="apiClient.cs" />
     <Compile Include="Company.cs" />
     <Compile Include="CompanyClient.cs" />
     <Compile Include="Program.cs" />

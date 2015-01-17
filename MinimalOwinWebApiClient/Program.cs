@@ -7,47 +7,83 @@ using System.Threading.Tasks;
 // Add Usings:
 using System.Net.Http;
 
-
 namespace MinimalOwinWebApiClient
 {
     class Program
     {
         static void Main(string[] args)
         {
+            Run();
+            Console.WriteLine("Done! Press the Enter key to Exit...");
+            Console.ReadLine();
+            return;
+        }
+
+        static async void Run()
+        {
+            // Create an http client provider:
+            string hostUriString = "http://localhost:8080";
+            var provider = new apiClientProvider(hostUriString);
+            string _accessToken;
+
+            try
+            {
+                Dictionary<string, string> tokenDictionary = await provider.GetTokenDictionary("john@example.com", "password");
+                _accessToken = tokenDictionary["access_token"];
+            }
+            catch (AggregateException ex)
+            {
+                Console.WriteLine(ex.InnerExceptions[0].Message);
+                Console.WriteLine("Press the Enter key to Exit...");
+                Console.ReadLine();
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine("Press the Enter key to Exit...");
+                Console.ReadLine();
+                return;
+            }
+
+
+            // Create a company client instance:
+            var baseUri = new Uri(hostUriString);
+            var companyClient = new CompanyClient(baseUri, _accessToken);
+
+            // Read initial companies:
             Console.WriteLine("Read all the companies...");
-            var companyClient = new CompanyClient("http://localhost:8080");
-            var companies = companyClient.GetCompanies();
+            var companies = await companyClient.GetCompaniesAsync();
             WriteCompaniesList(companies);
 
-            int nextId  = (from c in companies select c.Id).Max() + 1;
+            int nextId = (from c in companies select c.Id).Max() + 1;
 
             Console.WriteLine("Add a new company...");
-            var result = companyClient.AddCompany(new Company { Name = string.Format("New Company #{0}", nextId) });
+            var result = await companyClient.AddCompanyAsync(new Company { Name = string.Format("New Company #{0}", nextId) });
             WriteStatusCodeResult(result);
 
             Console.WriteLine("Updated List after Add:");
-            companies = companyClient.GetCompanies();
+            companies = await companyClient.GetCompaniesAsync();
             WriteCompaniesList(companies);
 
             Console.WriteLine("Update a company...");
-            var updateMe = companyClient.GetCompany(nextId);
+            var updateMe = await companyClient.GetCompanyAsync(nextId);
             updateMe.Name = string.Format("Updated company #{0}", updateMe.Id);
-            result = companyClient.UpdateCompany(updateMe);
+            result = await companyClient.UpdateCompanyAsync(updateMe);
             WriteStatusCodeResult(result);
 
             Console.WriteLine("Updated List after Update:");
-            companies = companyClient.GetCompanies();
+            companies = await companyClient.GetCompaniesAsync();
             WriteCompaniesList(companies);
 
+
             Console.WriteLine("Delete a company...");
-            result = companyClient.DeleteCompany(nextId -1);
+            result = await companyClient.DeleteCompanyAsync(nextId - 1);
             WriteStatusCodeResult(result);
 
             Console.WriteLine("Updated List after Delete:");
-            companies = companyClient.GetCompanies();
+            companies = await companyClient.GetCompaniesAsync();
             WriteCompaniesList(companies);
-
-            Console.Read();
         }
 
 
@@ -73,82 +109,4 @@ namespace MinimalOwinWebApiClient
             Console.WriteLine("");
         }
     }
-
-
-    //public class CompanyClient
-    //{
-    //    string _hostUri;
-
-    //    public CompanyClient(string hostUri)
-    //    {
-    //        _hostUri = hostUri;
-    //    }
-
-
-    //    public HttpClient CreateClient()
-    //    {
-    //        var client = new HttpClient();
-    //        client.BaseAddress = new Uri(new Uri(_hostUri), "api/companies/");
-    //        return client;
-    //    }
-
-
-    //    public IEnumerable<Company> GetCompanies()
-    //    {
-    //        HttpResponseMessage response;
-    //        using(var client = CreateClient())
-    //        {
-    //            response = client.GetAsync(client.BaseAddress).Result;
-    //        }
-
-    //        var result = response.Content.ReadAsAsync<IEnumerable<Company>>().Result;
-    //        return result;
-    //    }
-
-
-    //    public Company GetCompany(int id)
-    //    {
-    //        HttpResponseMessage response;
-    //        using (var client = CreateClient())
-    //        {
-    //            response = client.GetAsync(new Uri(client.BaseAddress, id.ToString())).Result;
-    //        }
-
-    //        var result = response.Content.ReadAsAsync<Company>().Result;
-    //        return result;
-    //    }
-
-
-    //    public System.Net.HttpStatusCode AddCompany(Company company)
-    //    {
-    //        HttpResponseMessage response;
-    //        using (var client = CreateClient())
-    //        {
-    //            response = client.PostAsJsonAsync(client.BaseAddress, company).Result;
-    //        }
-    //        return response.StatusCode;
-    //    }
-
-
-    //    public System.Net.HttpStatusCode UpdateCompany(Company company)
-    //    {
-    //        HttpResponseMessage response;
-    //        using (var client = CreateClient())
-    //        {
-    //            response = client.PutAsJsonAsync(client.BaseAddress, company).Result;
-    //        }
-    //        return response.StatusCode;
-    //    }
-
-
-    //    public System.Net.HttpStatusCode DeleteCompany(int id)
-    //    {
-    //        HttpResponseMessage response;
-    //        using (var client = CreateClient())
-    //        {
-    //            response = client.DeleteAsync(new Uri(client.BaseAddress, id.ToString())).Result;
-    //        }
-    //        return response.StatusCode;
-    //    }
-    //}
 }

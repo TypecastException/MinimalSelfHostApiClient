@@ -6,79 +6,90 @@ using System.Threading.Tasks;
 
 // Add Usings:
 using System.Net.Http;
+using System.Net;
+
+// Add for Identity/Token Deserialization:
+using Newtonsoft.Json;
 
 namespace MinimalOwinWebApiClient
 {
     public class CompanyClient
     {
-        string _hostUri;
-
-        public CompanyClient(string hostUri)
+        string _accessToken;
+        Uri _baseRequestUri;
+        public CompanyClient(Uri baseUri, string accessToken)
         {
-            _hostUri = hostUri;
+            _accessToken = accessToken;
+            _baseRequestUri = new Uri(baseUri, "api/companies/");
         }
 
-
-        public HttpClient CreateClient()
+        void SetClientAuthentication(HttpClient client)
         {
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(new Uri(_hostUri), "api/companies/");
-            return client;
+            client.DefaultRequestHeaders.Authorization 
+                = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken); 
         }
 
-
-        public IEnumerable<Company> GetCompanies()
+        public async Task<IEnumerable<Company>> GetCompaniesAsync()
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using(var client = new HttpClient())
             {
-                response = client.GetAsync(client.BaseAddress).Result;
+                client.BaseAddress = _baseRequestUri;
+                SetClientAuthentication(client);
+                response = await client.GetAsync(client.BaseAddress);
             }
-            var result = response.Content.ReadAsAsync<IEnumerable<Company>>().Result;
+            return await response.Content.ReadAsAsync<IEnumerable<Company>>();
+        }
+
+
+        public async Task<Company> GetCompanyAsync(int id)
+        {
+            HttpResponseMessage response;
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = _baseRequestUri;
+                SetClientAuthentication(client);
+                response = await client.GetAsync(new Uri(_baseRequestUri, id.ToString()));
+            }
+            var result = await response.Content.ReadAsAsync<Company>();
             return result;
         }
 
 
-        public Company GetCompany(int id)
+        public async Task<HttpStatusCode> AddCompanyAsync(Company company)
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using(var client = new HttpClient())
             {
-                response = client.GetAsync(new Uri(client.BaseAddress, id.ToString())).Result;
-            }
-            var result = response.Content.ReadAsAsync<Company>().Result;
-            return result;
-        }
-
-
-        public System.Net.HttpStatusCode AddCompany(Company company)
-        {
-            HttpResponseMessage response;
-            using (var client = CreateClient())
-            {
-                response = client.PostAsJsonAsync(client.BaseAddress, company).Result;
+                client.BaseAddress = _baseRequestUri;
+                SetClientAuthentication(client);
+                response = await client.PostAsJsonAsync(client.BaseAddress, company);
             }
             return response.StatusCode;
         }
 
 
-        public System.Net.HttpStatusCode UpdateCompany(Company company)
+        public async Task<HttpStatusCode> UpdateCompanyAsync(Company company)
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response = client.PutAsJsonAsync(client.BaseAddress, company).Result;
+                client.BaseAddress = _baseRequestUri;
+                SetClientAuthentication(client);
+                response = await client.PutAsJsonAsync(client.BaseAddress, company);
             }
             return response.StatusCode;
         }
 
 
-        public System.Net.HttpStatusCode DeleteCompany(int id)
+        public async Task<HttpStatusCode> DeleteCompanyAsync(int id)
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response = client.DeleteAsync(new Uri(client.BaseAddress, id.ToString())).Result;
+                client.BaseAddress = _baseRequestUri;
+                SetClientAuthentication(client);
+                response = await client.DeleteAsync(new Uri(client.BaseAddress, id.ToString()));
             }
             return response.StatusCode;
         }
