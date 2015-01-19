@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 // Add Usings:
 using System.Net.Http;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Web.Http;
 
 // Add for Identity/Token Deserialization:
 using Newtonsoft.Json;
+
 
 namespace MinimalOwinWebApiClient
 {
@@ -23,20 +26,27 @@ namespace MinimalOwinWebApiClient
             _baseRequestUri = new Uri(baseUri, "api/companies/");
         }
 
+
+        // Handy helper method to set the access token for each request:
         void SetClientAuthentication(HttpClient client)
         {
             client.DefaultRequestHeaders.Authorization 
-                = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken); 
+                = new AuthenticationHeaderValue("Bearer", _accessToken); 
         }
+
 
         public async Task<IEnumerable<Company>> GetCompaniesAsync()
         {
             HttpResponseMessage response;
             using(var client = new HttpClient())
             {
-                client.BaseAddress = _baseRequestUri;
                 SetClientAuthentication(client);
-                response = await client.GetAsync(client.BaseAddress);
+                response = await client.GetAsync(_baseRequestUri);
+            }
+            if(!response.IsSuccessStatusCode)
+            {
+                throw new Exception(string.Format(
+                    "API Error: Status Code: {0}", response.StatusCode));
             }
             return await response.Content.ReadAsAsync<IEnumerable<Company>>();
         }
@@ -47,9 +57,12 @@ namespace MinimalOwinWebApiClient
             HttpResponseMessage response;
             using (var client = new HttpClient())
             {
-                client.BaseAddress = _baseRequestUri;
                 SetClientAuthentication(client);
-                response = await client.GetAsync(new Uri(_baseRequestUri, id.ToString()));
+
+                // Combine base address URI and ID to new URI
+                // that looks like http://hosturl/api/companies/id
+                response = await client.GetAsync(
+                    new Uri(_baseRequestUri, id.ToString()));
             }
             var result = await response.Content.ReadAsAsync<Company>();
             return result;
@@ -61,9 +74,9 @@ namespace MinimalOwinWebApiClient
             HttpResponseMessage response;
             using(var client = new HttpClient())
             {
-                client.BaseAddress = _baseRequestUri;
                 SetClientAuthentication(client);
-                response = await client.PostAsJsonAsync(client.BaseAddress, company);
+                response = await client.PostAsJsonAsync(
+                    _baseRequestUri, company);
             }
             return response.StatusCode;
         }
@@ -74,9 +87,9 @@ namespace MinimalOwinWebApiClient
             HttpResponseMessage response;
             using (var client = new HttpClient())
             {
-                client.BaseAddress = _baseRequestUri;
                 SetClientAuthentication(client);
-                response = await client.PutAsJsonAsync(client.BaseAddress, company);
+                response = await client.PutAsJsonAsync(
+                    _baseRequestUri, company);
             }
             return response.StatusCode;
         }
@@ -87,9 +100,12 @@ namespace MinimalOwinWebApiClient
             HttpResponseMessage response;
             using (var client = new HttpClient())
             {
-                client.BaseAddress = _baseRequestUri;
                 SetClientAuthentication(client);
-                response = await client.DeleteAsync(new Uri(client.BaseAddress, id.ToString()));
+
+                // Combine base address URI and ID to new URI
+                // that looks like http://hosturl/api/companies/id
+                response = await client.DeleteAsync(
+                    new Uri(_baseRequestUri, id.ToString()));
             }
             return response.StatusCode;
         }

@@ -55,7 +55,8 @@ namespace MinimalOwinWebApiClient
             string responseContent)
         {
             Dictionary<string, string> tokenDictionary =
-                JsonConvert.DeserializeObject<Dictionary<string, string>>(responseContent);
+                JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                responseContent);
             return tokenDictionary;
         }
     }
