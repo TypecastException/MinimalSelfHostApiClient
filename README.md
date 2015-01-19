@@ -7,6 +7,6 @@ The following branch is referenced from the first post in the series, and implem
 
 * **api-basic -** Implement basic API client to make simple, unauthenticated call to the web API and output to console.
 
-This branch is referenced from the second article in the series, where we have added a simple example of OWIN-based authentication and authorization to the Web Api. The post can be found at [ASP.NET Web Api: Understanding OWIN/Katana Authentication/Authorization Part I: Concepts](http://typecastexception.com/post/2015/01/19/ASPNET-Web-Api-Understanding-OWINKatana-AuthenticationAuthorization-Part-I-Concepts.aspx)
+The next branch is referenced from the second article in the series, where we have added a simple example of OWIN-based authentication and authorization to the Web Api. The post can be found at [ASP.NET Web Api: Understanding OWIN/Katana Authentication/Authorization Part I: Concepts](http://typecastexception.com/post/2015/01/19/ASPNET-Web-Api-Understanding-OWINKatana-AuthenticationAuthorization-Part-I-Concepts.aspx)
 
 * **Branch: owin-auth -** Update API to request an access token, and make authenticated calls to the API. 
